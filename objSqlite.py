@@ -86,6 +86,9 @@ class objSqlite:
         result = self.sql_query(_sql)
         return result
 
+    def selectOne(self, table, cond, columns='*'):
+        return self.selectWhere(table, cond, columns)[0]
+
     def update(self, table, values, cond):
         _sql = "UPDATE {} \nSET\n".format(table)
         _v_int = ''

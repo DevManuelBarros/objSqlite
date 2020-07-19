@@ -34,12 +34,33 @@ if __name__ == "__main__":
     # Vamos a volver a mostrar todos los resultados
     result = objLite.selectAll(tabla)
     for val in result:
-        print(val)
+        print('el resultado es: {}'.format(val))
     
     
     # Actualizar un valor:
     values = {'poblacion' : 999999}
     print(objLite.update(tabla, values, cond='nombre=\'Argentina\''))
-    objLite.close()
 
+    # Mostramos nuevamente los resultado:
+    result = objLite.selectAll(tabla)
+    for val in result:
+        print('el resultado es: {}'.format(val))
+
+
+    # Empezaremos a probar filtrado de Select
+    # Primero iremos por el SelectWhere ...
+    result = objLite.selectWhere(tabla, 'nombre=\'Argentina\'', columns='poblacion')
+    for val in result:
+        print('Debería ser un resultado --> {}'.format(val[0]))
+
+
+    # Ahora recuperamos solo un registro completo.
+    result = objLite.selectOne(tabla, 'nombre=\'Argentina\'')
+    print('El resultado en una sola linea: {}'.format(result))
+
+
+
+    # Vamos a cerrar la conección a la base de datos
+
+    objLite.close()
 
