@@ -9,11 +9,12 @@ class objSqlite:
     __con = 0       # conector
 
     #__types soportados principalmente por Sqlite3
-    __types = {'I' : 'INTEGER',
-             'R' : 'REAL',
-             'T' : 'TEXT',
-             'B' : 'BLOB',
-             'P' : 'PRIMARY KEY'
+    __types ={  'I' : 'INTEGER',
+                'R' : 'REAL',
+                'T' : 'TEXT',
+                'B' : 'BLOB',
+                'P' : 'PRIMARY KEY',
+                'U' : 'UNIQUE'
              }
 
     def __init__(self, database, con=True):
@@ -31,16 +32,31 @@ class objSqlite:
     
     def sql_execute(self, sql):
         _cursorObj = self.__con.cursor()
-        _cursorObj.execute(sql)
-        self.__con.commit()
+        try:
+            _cursorObj.execute(sql)
+            self.__con.commit()
+            return True
+        except Error as err:
+            return err
 
     
     def sql_query(self, sql):
         _cursorObj = self.__con.cursor()
-        _cursorObj.execute(sql)
-        rows = _cursorObj.fetchall()
-        return rows
+        try:
+            _cursorObj.execute(sql)
+            rows = _cursorObj.fetchall()
+            return rows
+        except Error as err:
+            return err
 
+
+    def delete(self, table, _value, column='id'):
+        _sql = "DELETE FROM {} WHERE {} = ".format(table, column)
+        if isinstance(_value, int):
+            _sql += str(_value)
+        else:
+            _sql += '\"{}\"'.format(_value)
+        return self.sql_execute(_sql)
 
     def insert(self, table, values):
         _sql = "INSERT INTO {} ".format(table)
@@ -70,8 +86,22 @@ class objSqlite:
         result = self.sql_query(_sql)
         return result
 
+    def update(self, table, values, cond):
+        _sql = "UPDATE {} \nSET\n".format(table)
+        _v_int = ''
+        for k, v in values.items():
+            if isinstance(v, int):
+                _v_int += '\t{} = {},\n'.format(k, str(v))
+            else:
+                _v_int += '\t{} = \"{}\",\n'.format(k, str(v))
+        _sql += _v_int[:-2]
+        _sql += "\nWHERE {}".format(cond)
+        return self.sql_execute(_sql)
+        
 
-    def create_sql_table(self, dict_tables):
+
+
+    def create_table(self, dict_tables):
         _fullSql = []
         for k, value in dict_tables.items():
             _sql = 'CREATE TABLE IF NOT EXISTS {} '.format(k)
@@ -81,16 +111,15 @@ class objSqlite:
                 field = field.strip(' ')
                 detail = field.split(" ")
                 code_int += detail[0]
-                dKey = str(detail[1][0]).upper()
-                code_int += ' ' + self.__types[dKey]
-                if len(detail[1])> 1:
-                    code_int += ' PRIMARY KEY'
+                for nKey in str(detail[1]).upper():
+                    code_int += ' ' + self.__types[nKey]
                 code_int += ','
             code_int = code_int[:-1]
             _sql += '(' + code_int + ')'
             _fullSql.append(_sql)
         for table in _fullSql:
             self.sql_execute(table)
+
 
     def close(self):
         self.__con.close()
